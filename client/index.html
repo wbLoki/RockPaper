@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket</title>
+    <style>
+        .message {
+            display: block;
+        }
+    </style>
+    <script>
+
+
+        const socket = new WebSocket("ws://localhost:8080/ws");
+        // Connection opened
+        socket.addEventListener("open", (event) => {
+            console.log("Connected to ws://localhost:8080")
+        });
+
+        // Listen for messages
+        socket.addEventListener("message", (event) => {
+            var messages = document.getElementById("messages");
+            if (event.data.includes("!hasfile")) {
+                var divWrapper = document.createElement("div")
+                var MetaDataSpan = document.createElement("span")
+                MetaDataSpan.textContent = event.data.split("!hasfile")[0]
+                MetaDataSpan.className = "message"
+                var msg = event.data.split("!hasfile")[1]
+                var imgElement = document.createElement("img")
+                imgElement.src = `data:image/*;base64,${msg}`
+                divWrapper.appendChild(MetaDataSpan)
+                divWrapper.appendChild(imgElement)
+                messages.appendChild(divWrapper)
+            } else {
+                var elem = document.createElement("span");
+                elem.textContent = event.data
+                elem.className = "message"
+                messages.appendChild(elem)
+            }
+
+        });
+        var fileExist = false
+        document.addEventListener("DOMContentLoaded", () => {
+            var filesElement = document.getElementById("file")
+            filesElement.addEventListener("change", () => {
+                if (filesElement.files.length > 0) {
+                    fileExist = true
+                } else {
+                    fileExist = false
+                }
+
+            })
+        })
+
+        function send_message() {
+            event.preventDefault()
+            var message = document.getElementById("msg")
+            var roiMessage = message.value
+            if (fileExist) {
+                const file = document.getElementById("file").files[0]
+                const reader = new FileReader()
+
+                reader.onload = function (e) {
+                    const binaryData = new Uint8Array(reader.result);
+                    const base64Data = btoa(String.fromCharCode(...binaryData));
+                    socket.send(`!file ${base64Data}`)
+
+                }
+                reader.readAsArrayBuffer(file)
+                fileExist = false
+                message.value = ""
+                return 1
+            }
+            socket.send(roiMessage)
+            message.value = ""
+            return 1
+        }
+
+    </script>
+</head>
+
+<body>
+    <center>
+
+        <div id="chatbox">
+            <div id="messages">
+
+            </div>
+            <form onsubmit="send_message()">
+                <input type="text" id="msg" />
+                <input type="submit" value="Send" />
+                <input type="file" id="file" />
+            </form>
+        </div>
+    </center>
+</body>
+
+</html>
