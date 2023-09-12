@@ -16,8 +16,8 @@ func check(e error) {
 
 type Game struct {
 	id        string
-	playerOne *string
-	playerTwo *string
+	playerOne *bool
+	playerTwo *bool
 	board     [6]int
 }
 
@@ -26,37 +26,43 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024}
 	connections []*websocket.Conn
-	Games       = map[int]Game{}
+	Games       = map[string]Game{}
 )
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Home Page")
 }
 
-func StringPointer(s string) *string {
+func boolPointer(s bool) *bool {
 	return &s
+}
+
+func assignPlayers(gameToken string) bool {
+	val, ok := Games[gameToken]
+
+	if !ok {
+		Games[gameToken] = Game{
+			id:        gameToken,
+			playerOne: boolPointer(true),
+		}
+		return false
+	} else {
+		val.playerTwo = boolPointer(true)
+		Games[gameToken] = val
+		return true
+	}
 }
 
 func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-
 	ws, err := upgrader.Upgrade(w, r, nil)
-	check(err)
-
-	// TODO
-	/*
-		this code below should go into a function in a different endpoint normal http request
-		send request to create game and get game id then send it to the ws and wait for player2
-		after the player2 joins with the game id , now you can start the game
-
-		id := rand.Intn(math.MaxInt8) // Maxint8 since i don't think im gonna have more than 64 games
-		Games[id] = Game{
-			playerOne: StringPointer("playerOneTEST"),
-			playerTwo: StringPointer("PlayerTwoTEST"),
-			id:        "323"}
-
-	*/
 	connections = append(connections, ws)
+
+	var gameToken string = r.URL.Query().Get("token")
+	if assignPlayers(gameToken) {
+		castMessage([]byte("Game On"), 1)
+	}
+	check(err)
 	reader(ws)
 }
 
