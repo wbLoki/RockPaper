@@ -1,6 +1,9 @@
 package main
 
 import (
+	function "RockPaper/game"
+	"RockPaper/models"
+	"RockPaper/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,45 +17,16 @@ func check(e error) {
 	}
 }
 
-type Game struct {
-	id        string
-	playerOne *bool
-	playerTwo *bool
-	status    *bool
-	board     [6]int
-}
-
 var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024}
 	connections []*websocket.Conn
-	Games       = map[string]Game{}
+	Games       = map[string]models.Game{}
 )
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Home Page")
-}
-
-func boolPointer(s bool) *bool {
-	return &s
-}
-
-func assignPlayers(gameToken string) bool {
-	val, ok := Games[gameToken]
-
-	if !ok {
-		Games[gameToken] = Game{
-			id:        gameToken,
-			playerOne: boolPointer(true),
-		}
-		return false
-	} else {
-		val.playerTwo = boolPointer(true)
-		val.status = boolPointer(true)
-		Games[gameToken] = val
-		return true
-	}
 }
 
 func wsEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -61,8 +35,12 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	connections = append(connections, ws)
 
 	var gameToken string = r.URL.Query().Get("token")
-	if assignPlayers(gameToken) {
-		castMessage([]byte("gameon"), 1)
+	var gameTokenLength int = len(gameToken)
+	var playerID string = string(gameToken[gameTokenLength-1])
+	gameToken = gameToken[:gameTokenLength-1]
+	fmt.Println(gameToken, playerID)
+	if function.AssignPlayers(gameToken, Games) {
+		utils.CastMessage([]byte("gameon"), 1, connections)
 	}
 	check(err)
 	reader(ws)
@@ -73,19 +51,13 @@ func reader(conn *websocket.Conn) {
 		messageType, p, err := conn.ReadMessage()
 		check(err)
 		fmt.Println(string(p)) // TODO remove this incoming msg
-		castMessage(p, messageType)
+		utils.CastMessage(p, messageType, connections)
 	}
 }
 
 func setupRoutes() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/ws", wsEndpoint)
-}
-
-func castMessage(message []byte, mType int) {
-	for _, connection := range connections {
-		connection.WriteMessage(mType, message)
-	}
 }
 
 func main() {

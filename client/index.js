@@ -61,8 +61,10 @@ function createGame() {
     phaseElem.appendChild(instrElem)
     phaseElem.appendChild(headerElement)
     gameContainer.appendChild(phaseElem)
+    gameId += 1 // playerOne
     connectToWs()
     hideElements()
+    setCookie('gameToken', gameId, 1);
 }
 
 function joinGame() {
@@ -72,7 +74,9 @@ function joinGame() {
         return false
     }
     gameId = gameIdValue
+    gameId += 2 // playerTwo
     connectToWs()
-    hideElements()
+    hideElements() 
+    setCookie('gameToken', gameId, 1);
 }
 

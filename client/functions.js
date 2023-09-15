@@ -5,7 +5,10 @@ class GameState {
     onChange(newState) {
         if (newState == "gameon") {
             document.getElementsByTagName("body")[0].className = "gameon"
-            document.getElementsByClassName("ph1")[0].className = "hide"
+            var phaseElement = document.getElementsByClassName("ph1")[0]
+            if (phaseElement) {
+                phaseElement.className = "hide"
+            }
         }
     }
 
@@ -21,4 +24,14 @@ class GameState {
     get() {
         return this.value;
     }
+}
+
+// Function to set a cookie
+function setCookie(name, value, daysToExpire) {
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + daysToExpire);
+
+    const cookieValue = `${name}=${encodeURIComponent(value)}; expires=${expirationDate.toUTCString()}; path=/`;
+
+    document.cookie = cookieValue;
 }
