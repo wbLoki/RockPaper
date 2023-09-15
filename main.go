@@ -18,6 +18,7 @@ type Game struct {
 	id        string
 	playerOne *bool
 	playerTwo *bool
+	status    *bool
 	board     [6]int
 }
 
@@ -48,6 +49,7 @@ func assignPlayers(gameToken string) bool {
 		return false
 	} else {
 		val.playerTwo = boolPointer(true)
+		val.status = boolPointer(true)
 		Games[gameToken] = val
 		return true
 	}
@@ -60,7 +62,7 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	var gameToken string = r.URL.Query().Get("token")
 	if assignPlayers(gameToken) {
-		castMessage([]byte("Game On"), 1)
+		castMessage([]byte("gameon"), 1)
 	}
 	check(err)
 	reader(ws)
@@ -70,7 +72,7 @@ func reader(conn *websocket.Conn) {
 	for {
 		messageType, p, err := conn.ReadMessage()
 		check(err)
-		fmt.Println(string(p))
+		fmt.Println(string(p)) // TODO remove this incoming msg
 		castMessage(p, messageType)
 	}
 }
