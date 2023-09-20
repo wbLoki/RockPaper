@@ -5,5 +5,10 @@ type Game struct {
 	PlayerOne *bool
 	PlayerTwo *bool
 	Status    *bool
-	Board     [6]int
+	Score     [6]int
+	Board     [2]int
+	Hands     [2]string
+}
+
+type Dict map[int]interface {
 }
