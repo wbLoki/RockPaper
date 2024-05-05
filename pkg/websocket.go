@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -60,13 +61,14 @@ func (pool *Pool) Start() {
 	for {
 		select {
 		case client := <-pool.register:
+			client.Conn.WriteMessage(1, []byte("Welcome Player "+strconv.Itoa(client.ID)))
+			for client, _ := range pool.Clients {
+				client.Conn.WriteMessage(1, []byte("Player 2 Joined"))
+			}
 			pool.Clients[client] = true
 			pool.board[client.ID] = &Hand{
 				client: client,
 				hand:   "X",
-			}
-			for client, _ := range pool.Clients {
-				client.Conn.WriteMessage(1, []byte("New User Joined"))
 			}
 			break
 		case message := <-pool.broadcast:
@@ -85,21 +87,16 @@ func (pool *Pool) Start() {
 			break
 
 		case gameStatus := <-pool.gameStatus:
-			fmt.Println("in GameStatus", len(pool.board), gameStatus)
 			var isReady bool = IsPlayersReady(pool)
 			if isReady {
-				fmt.Println("Who WIn Logic")
 				var player1Hand string = pool.board[1].hand
 				var player2Hand string = pool.board[2].hand
 
 				var winnerId int = PlayGame(player1Hand, player2Hand)
 
-				fmt.Println("Hands", player1Hand, player2Hand)
-
 				if winnerId == 0 {
-					pool.broadcast <- Message{
-						MessageType: 1,
-						Message:     "It's a tie",
+					for c, _ := range pool.Clients {
+						c.Conn.WriteMessage(1, []byte("It's a Tie !!"))
 					}
 				} else {
 					for c, _ := range pool.Clients {
@@ -115,24 +112,31 @@ func (pool *Pool) Start() {
 			} else {
 				pool.board[gameStatus].client.Conn.WriteMessage(1, []byte("Waiting for Player 2 ..."))
 			}
-			// }
 			break
 		}
 	}
 }
 
 func ServeWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
-
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
+	var clientId int = len(pool.Clients) + 1
+	_, ok := pool.board[clientId]
+	if ok {
+		clientId = 1
+	}
+
 	client := &Client{
 		Conn: conn,
 		pool: pool,
-		ID:   len(pool.Clients) + 1,
+		ID:   clientId,
 	}
 
 	pool.register <- client

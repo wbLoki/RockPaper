@@ -12,13 +12,14 @@ type Client struct {
 	pool *Pool
 }
 
+// Message Formate {"type":2,"message":"paper"}
 type Message struct {
 	MessageType int    `json:"type"`
 	Message     string `json:"message"`
 }
 
 const (
-	Chat     = iota + 1
+	Chat     = 1
 	Game     = 2
 	Rock     = "rock"
 	Paper    = "paper"
@@ -38,7 +39,6 @@ func (client *Client) Read() {
 			break
 		}
 
-		fmt.Println("Checking Type: ", incomingMessage.MessageType)
 		if incomingMessage.MessageType == Game {
 			client.pool.board[client.ID].hand = incomingMessage.Message
 			client.pool.gameStatus <- client.ID
