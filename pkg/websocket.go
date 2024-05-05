@@ -61,9 +61,16 @@ func (pool *Pool) Start() {
 	for {
 		select {
 		case client := <-pool.register:
-			client.Conn.WriteMessage(1, []byte("Welcome Player "+strconv.Itoa(client.ID)))
-			for client, _ := range pool.Clients {
-				client.Conn.WriteMessage(1, []byte("Player 2 Joined"))
+			client.Conn.WriteJSON(Message{
+				MessageType: GM,
+				Message:     "Welcome Player " + strconv.Itoa(client.ID),
+			})
+
+			for _client, _ := range pool.Clients {
+				_client.Conn.WriteJSON(Message{
+					MessageType: GM,
+					Message:     "Player " + strconv.Itoa(client.ID) + " Joined",
+				})
 			}
 			pool.Clients[client] = true
 			pool.board[client.ID] = &Hand{
@@ -96,21 +103,33 @@ func (pool *Pool) Start() {
 
 				if winnerId == 0 {
 					for c, _ := range pool.Clients {
-						c.Conn.WriteMessage(1, []byte("It's a Tie !!"))
+						c.Conn.WriteJSON(Message{
+							MessageType: GM,
+							Message:     "It's a Tie !!",
+						})
 					}
 				} else {
 					for c, _ := range pool.Clients {
 						if winnerId == c.ID {
-							c.Conn.WriteMessage(1, []byte("You Win !"))
+							c.Conn.WriteJSON(Message{
+								MessageType: GM,
+								Message:     "You Win !",
+							})
 							continue
 						}
-						c.Conn.WriteMessage(1, []byte("You Lose !"))
+						c.Conn.WriteJSON(Message{
+							MessageType: GM,
+							Message:     "You Lose !",
+						})
 					}
 				}
 				pool.board[1].hand = "X"
 				pool.board[2].hand = "X"
 			} else {
-				pool.board[gameStatus].client.Conn.WriteMessage(1, []byte("Waiting for Player 2 ..."))
+				pool.board[gameStatus].client.Conn.WriteJSON(Message{
+					MessageType: GM,
+					Message:     "Waiting for Player 2 ...",
+				})
 			}
 			break
 		}

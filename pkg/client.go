@@ -21,6 +21,7 @@ type Message struct {
 const (
 	Chat     = 1
 	Game     = 2
+	GM       = 3
 	Rock     = "rock"
 	Paper    = "paper"
 	Scissors = "scissors"
