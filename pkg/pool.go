@@ -14,6 +14,17 @@ type Pool struct {
 	gameStatus chan int
 }
 
+func NewPool() *Pool {
+	return &Pool{
+		Clients:    make(map[*Client]bool),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		broadcast:  make(chan Message),
+		board:      make(map[int]*Hand),
+		gameStatus: make(chan int),
+	}
+}
+
 func (pool *Pool) Start() {
 	for {
 		select {

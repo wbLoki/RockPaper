@@ -20,17 +20,6 @@ const (
 	maxMessageSize = 512
 )
 
-func NewPool() *Pool {
-	return &Pool{
-		Clients:    make(map[*Client]bool),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		broadcast:  make(chan Message),
-		board:      make(map[int]*Hand),
-		gameStatus: make(chan int),
-	}
-}
-
 type Hand struct {
 	client *Client
 	hand   string
