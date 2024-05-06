@@ -1,10 +1,8 @@
 package pkg
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,15 +19,6 @@ const (
 	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 512
 )
-
-type Pool struct {
-	Clients    map[*Client]bool
-	register   chan *Client
-	unregister chan *Client
-	broadcast  chan Message
-	board      map[int]*Hand
-	gameStatus chan int
-}
 
 func NewPool() *Pool {
 	return &Pool{
@@ -54,85 +43,6 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		Pools: make(map[string]*Pool),
-	}
-}
-
-func (pool *Pool) Start() {
-	for {
-		select {
-		case client := <-pool.register:
-			client.Conn.WriteJSON(Message{
-				MessageType: GM,
-				Message:     "Welcome Player " + strconv.Itoa(client.ID),
-			})
-
-			for _client, _ := range pool.Clients {
-				_client.Conn.WriteJSON(Message{
-					MessageType: GM,
-					Message:     "Player " + strconv.Itoa(client.ID) + " Joined",
-				})
-			}
-			pool.Clients[client] = true
-			pool.board[client.ID] = &Hand{
-				client: client,
-				hand:   "X",
-			}
-			break
-		case message := <-pool.broadcast:
-
-			for client, _ := range pool.Clients {
-				if err := client.Conn.WriteJSON(message); err != nil {
-					fmt.Println(err)
-					return
-				}
-			}
-			break
-
-		case client := <-pool.unregister:
-			delete(pool.Clients, client)
-			delete(pool.board, client.ID)
-			break
-
-		case gameStatus := <-pool.gameStatus:
-			var isReady bool = IsPlayersReady(pool)
-			if isReady {
-				var player1Hand string = pool.board[1].hand
-				var player2Hand string = pool.board[2].hand
-
-				var winnerId int = PlayGame(player1Hand, player2Hand)
-
-				if winnerId == 0 {
-					for c, _ := range pool.Clients {
-						c.Conn.WriteJSON(Message{
-							MessageType: GM,
-							Message:     "It's a Tie !!",
-						})
-					}
-				} else {
-					for c, _ := range pool.Clients {
-						if winnerId == c.ID {
-							c.Conn.WriteJSON(Message{
-								MessageType: GM,
-								Message:     "You Win !",
-							})
-							continue
-						}
-						c.Conn.WriteJSON(Message{
-							MessageType: GM,
-							Message:     "You Lose !",
-						})
-					}
-				}
-				pool.board[1].hand = "X"
-				pool.board[2].hand = "X"
-			} else {
-				pool.board[gameStatus].client.Conn.WriteJSON(Message{
-					MessageType: GM,
-					Message:     "Waiting for Player 2 ...",
-				})
-			}
-			break
-		}
 	}
 }
 
