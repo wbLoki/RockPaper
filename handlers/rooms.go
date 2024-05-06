@@ -14,22 +14,22 @@ type Room struct {
 func HandleWebsocketRoom(hub *pkg.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		roomId := c.Param("roomId")
-		if roomId == "" {
+		gameId := c.Param("gameId")
+		if gameId == "" {
 			c.String(http.StatusBadRequest, "Please give a room id")
 			return
 		}
 
-		if _, ok := hub.Pools[roomId]; !ok {
+		if _, ok := hub.Pools[gameId]; !ok {
 			pool := pkg.NewPool()
 
-			hub.Pools[roomId] = pool
+			hub.Pools[gameId] = pool
 
 			go pool.Start()
 
 		}
 
-		var pool *pkg.Pool = hub.Pools[roomId]
+		var pool *pkg.Pool = hub.Pools[gameId]
 
 		if len(pool.Clients) == 2 {
 			c.String(http.StatusForbidden, "Room is Full")
