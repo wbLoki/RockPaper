@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"ChatAppGin/pkg"
-	rooms "ChatAppGin/pkg"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,15 +9,6 @@ import (
 
 type Room struct {
 	ID string `json:"id"`
-}
-
-func CreatingRoom(c *gin.Context) {
-	var roomId string = rooms.GenerateRandomString()
-	var room Room = Room{
-		ID: roomId,
-	}
-	c.JSON(http.StatusOK, room)
-
 }
 
 func HandleWebsocketRoom(hub *pkg.Hub) gin.HandlerFunc {
@@ -31,8 +21,6 @@ func HandleWebsocketRoom(hub *pkg.Hub) gin.HandlerFunc {
 		}
 
 		if _, ok := hub.Pools[roomId]; !ok {
-			// fmt.Println("Pool Doesn't Exist Creating New Pool")
-
 			pool := pkg.NewPool()
 
 			hub.Pools[roomId] = pool

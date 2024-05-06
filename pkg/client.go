@@ -30,6 +30,10 @@ const (
 func (client *Client) Read() {
 	defer func() {
 		client.pool.unregister <- client
+		client.pool.broadcast <- Message{
+			MessageType: GM,
+			Message:     "Player Left",
+		}
 		client.Conn.Close()
 	}()
 	for {
@@ -40,12 +44,13 @@ func (client *Client) Read() {
 			break
 		}
 
-		if incomingMessage.MessageType == Game {
+		switch incomingMessage.MessageType {
+		case Game:
 			client.pool.board[client.ID].hand = incomingMessage.Message
 			client.pool.gameStatus <- client.ID
-		} else {
+			break
+		case Chat:
 			client.pool.broadcast <- incomingMessage
 		}
-
 	}
 }
