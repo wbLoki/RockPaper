@@ -1,22 +1,18 @@
 package handlers
 
 import (
-	"ChatAppGin/pkg"
+	"RockPaperScissor/pkg"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Room struct {
-	ID string `json:"id"`
-}
-
-func HandleWebsocketRoom(hub *pkg.Hub) gin.HandlerFunc {
+func HandleWebsocketGame(hub *pkg.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		gameId := c.Param("gameId")
 		if gameId == "" {
-			c.String(http.StatusBadRequest, "Please give a room id")
+			c.String(http.StatusBadRequest, "Please provide a Game ID")
 			return
 		}
 
@@ -32,7 +28,7 @@ func HandleWebsocketRoom(hub *pkg.Hub) gin.HandlerFunc {
 		var pool *pkg.Pool = hub.Pools[gameId]
 
 		if len(pool.Clients) == 2 {
-			c.String(http.StatusForbidden, "Room is Full")
+			c.String(http.StatusForbidden, "Lobby is Full")
 			return
 		}
 

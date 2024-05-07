@@ -1,8 +1,8 @@
 package main
 
 import (
-	"ChatAppGin/handlers"
-	"ChatAppGin/pkg"
+	"RockPaperScissor/handlers"
+	"RockPaperScissor/pkg"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +18,6 @@ func main() {
 	router := gin.New()
 	router.SetTrustedProxies(nil)
 	router.GET("/", HelloWorldHandler)
-	router.GET("/game/:gameId", handlers.HandleWebsocketRoom(hub))
+	router.GET("/game/:gameId", handlers.HandleWebsocketGame(hub))
 	router.Run(":8080")
 }

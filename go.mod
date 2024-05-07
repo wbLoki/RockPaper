@@ -1,4 +1,4 @@
-module ChatAppGin
+module RockPaperScissor
 
 go 1.21.0
 
