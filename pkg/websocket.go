@@ -45,7 +45,7 @@ func ServeWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// var clientId int = len(pool.Clients) + 1
+	var clientId int = len(pool.Clients) + 1
 	_, ok := pool.board[clientId]
 	if ok {
 		clientId = 1
