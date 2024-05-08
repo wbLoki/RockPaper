@@ -27,18 +27,18 @@ const (
 	Scissors = "scissors"
 )
 
-func (client *Client) Read() {
+func (c *Client) Read() {
 	defer func() {
-		client.pool.unregister <- client
-		client.pool.broadcast <- Message{
+		c.pool.unregister <- c
+		c.pool.broadcast <- Message{
 			MessageType: GM,
 			Message:     "Player Left",
 		}
-		client.Conn.Close()
+		c.Conn.Close()
 	}()
 	for {
 		var incomingMessage Message
-		err := client.Conn.ReadJSON(&incomingMessage)
+		err := c.Conn.ReadJSON(&incomingMessage)
 		if err != nil {
 			fmt.Println(err)
 			break
@@ -46,11 +46,11 @@ func (client *Client) Read() {
 
 		switch incomingMessage.MessageType {
 		case Game:
-			client.pool.board[client.ID].hand = incomingMessage.Message
-			client.pool.gameStatus <- client.ID
+			c.pool.board[c.ID].hand = incomingMessage.Message
+			c.pool.gameStatus <- c.ID
 			break
 		case Chat:
-			client.pool.broadcast <- incomingMessage
+			c.pool.broadcast <- incomingMessage
 		}
 	}
 }

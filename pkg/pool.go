@@ -25,42 +25,42 @@ func NewPool() *Pool {
 	}
 }
 
-func (pool *Pool) Start() {
+func (p *Pool) Start() {
 	for {
 		select {
-		case client := <-pool.register:
-			pool.handleClientRegistration(client)
-		case message := <-pool.broadcast:
-			pool.broadcastMessage(message)
-		case client := <-pool.unregister:
-			pool.unregisterClient(client)
-		case gameStatus := <-pool.gameStatus:
-			pool.handleGameStatus(gameStatus)
+		case client := <-p.register:
+			p.handleClientRegistration(client)
+		case message := <-p.broadcast:
+			p.broadcastMessage(message)
+		case client := <-p.unregister:
+			p.unregisterClient(client)
+		case gameStatus := <-p.gameStatus:
+			p.handleGameStatus(gameStatus)
 		}
 	}
 }
 
-func (pool *Pool) handleClientRegistration(client *Client) {
+func (p *Pool) handleClientRegistration(client *Client) {
 	client.Conn.WriteJSON(Message{
 		MessageType: GM,
 		Message:     "Welcome Player " + strconv.Itoa(client.ID),
 	})
 
-	for _client := range pool.Clients {
+	for _client := range p.Clients {
 		_client.Conn.WriteJSON(Message{
 			MessageType: GM,
 			Message:     "Player " + strconv.Itoa(client.ID) + " Joined",
 		})
 	}
-	pool.Clients[client] = true
-	pool.board[client.ID] = &Hand{
+	p.Clients[client] = true
+	p.board[client.ID] = &Hand{
 		client: client,
 		hand:   "X",
 	}
 }
 
-func (pool *Pool) broadcastMessage(message Message) {
-	for client := range pool.Clients {
+func (p *Pool) broadcastMessage(message Message) {
+	for client := range p.Clients {
 		if err := client.Conn.WriteJSON(message); err != nil {
 			fmt.Println(err)
 			return
@@ -68,38 +68,38 @@ func (pool *Pool) broadcastMessage(message Message) {
 	}
 }
 
-func (pool *Pool) unregisterClient(client *Client) {
-	delete(pool.Clients, client)
-	delete(pool.board, client.ID)
+func (p *Pool) unregisterClient(client *Client) {
+	delete(p.Clients, client)
+	delete(p.board, client.ID)
 }
 
-func (pool *Pool) handleGameStatus(gameStatus int) {
-	isReady := IsPlayersReady(pool)
+func (p *Pool) handleGameStatus(gameStatus int) {
+	isReady := IsPlayersReady(p)
 	if isReady {
-		pool.playGame()
+		p.playGame()
 	} else {
-		pool.notifyWaitingPlayers(gameStatus)
+		p.notifyWaitingPlayers(gameStatus)
 	}
 
 }
 
-func (pool *Pool) playGame() {
-	player1Hand := pool.board[1].hand
-	player2Hand := pool.board[2].hand
+func (p *Pool) playGame() {
+	player1Hand := p.board[1].hand
+	player2Hand := p.board[2].hand
 
 	winnerId := PlayGame(player1Hand, player2Hand)
 
 	if winnerId == 0 {
-		pool.notifyAllPlayers("It's a Tie !!")
+		p.notifyAllPlayers("It's a Tie !!")
 	} else {
-		pool.notifyWinnerAndLosers(winnerId)
+		p.notifyWinnerAndLosers(winnerId)
 	}
 
-	pool.resetHands()
+	p.resetHands()
 }
 
-func (pool *Pool) notifyAllPlayers(message string) {
-	for c := range pool.Clients {
+func (p *Pool) notifyAllPlayers(message string) {
+	for c := range p.Clients {
 		c.Conn.WriteJSON(Message{
 			MessageType: GM,
 			Message:     message,
@@ -107,8 +107,8 @@ func (pool *Pool) notifyAllPlayers(message string) {
 	}
 }
 
-func (pool *Pool) notifyWinnerAndLosers(winnerId int) {
-	for c := range pool.Clients {
+func (p *Pool) notifyWinnerAndLosers(winnerId int) {
+	for c := range p.Clients {
 		if winnerId == c.ID {
 			c.Conn.WriteJSON(Message{
 				MessageType: GM,
@@ -123,13 +123,13 @@ func (pool *Pool) notifyWinnerAndLosers(winnerId int) {
 	}
 }
 
-func (pool *Pool) resetHands() {
-	pool.board[1].hand = "X"
-	pool.board[2].hand = "X"
+func (p *Pool) resetHands() {
+	p.board[1].hand = "X"
+	p.board[2].hand = "X"
 }
 
-func (pool *Pool) notifyWaitingPlayers(gameStatus int) {
-	for client := range pool.Clients {
+func (p *Pool) notifyWaitingPlayers(gameStatus int) {
+	for client := range p.Clients {
 		if client.ID == gameStatus {
 			client.Conn.WriteJSON(Message{
 				MessageType: GM,
