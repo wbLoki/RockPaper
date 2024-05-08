@@ -13,7 +13,7 @@
   }
 }
 
-.App-header {
+body {
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
@@ -35,4 +35,19 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.Chat {
+  border: 1px solid black;
+  overflow-y: scroll;
+  height: 20vh;
+  max-width: 60vw;
+}
+p {
+  max-width: auto;
+  word-wrap: break-word;
+  padding: 10px;
+}
+input[type="text"] {
+  outline: none;
 }
