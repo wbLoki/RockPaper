@@ -55,6 +55,9 @@ func ServeWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
 		Conn: conn,
 		pool: pool,
 		ID:   clientId,
+		gameBoard: &GameBoard{
+			score: 0,
+		},
 	}
 
 	pool.register <- client

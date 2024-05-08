@@ -7,15 +7,21 @@ import (
 )
 
 type Client struct {
-	ID   int
-	Conn *websocket.Conn
-	pool *Pool
+	ID        int
+	Conn      *websocket.Conn
+	pool      *Pool
+	gameBoard *GameBoard
 }
 
 // Message Formate {"type":2,"message":"paper"}
 type Message struct {
 	MessageType int    `json:"type"`
 	Message     string `json:"message"`
+	Score       int    `json:"score"`
+}
+
+type GameBoard struct {
+	score int
 }
 
 const (
@@ -49,7 +55,7 @@ func (c *Client) Read() {
 			c.pool.board[c.ID].hand = incomingMessage.Message
 			c.pool.gameStatus <- c.ID
 			break
-		case Chat:
+		default:
 			c.pool.broadcast <- incomingMessage
 		}
 	}

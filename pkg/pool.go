@@ -42,7 +42,7 @@ func (p *Pool) Start() {
 
 func (p *Pool) handleClientRegistration(client *Client) {
 	client.Conn.WriteJSON(Message{
-		MessageType: GM,
+		MessageType: Chat,
 		Message:     "Welcome Player " + strconv.Itoa(client.ID),
 	})
 
@@ -103,6 +103,7 @@ func (p *Pool) notifyAllPlayers(message string) {
 		c.Conn.WriteJSON(Message{
 			MessageType: GM,
 			Message:     message,
+			Score:       c.gameBoard.score,
 		})
 	}
 }
@@ -110,14 +111,18 @@ func (p *Pool) notifyAllPlayers(message string) {
 func (p *Pool) notifyWinnerAndLosers(winnerId int) {
 	for c := range p.Clients {
 		if winnerId == c.ID {
+			c.gameBoard.score++
 			c.Conn.WriteJSON(Message{
 				MessageType: GM,
 				Message:     "You Win !",
-			})
+				Score:       c.gameBoard.score,
+			},
+			)
 		} else {
 			c.Conn.WriteJSON(Message{
 				MessageType: GM,
 				Message:     "You Lose !",
+				Score:       c.gameBoard.score,
 			})
 		}
 	}
@@ -134,11 +139,13 @@ func (p *Pool) notifyWaitingPlayers(gameStatus int) {
 			client.Conn.WriteJSON(Message{
 				MessageType: GM,
 				Message:     "Waiting for other player",
+				Score:       client.gameBoard.score,
 			})
 		} else {
 			client.Conn.WriteJSON(Message{
 				MessageType: GM,
 				Message:     fmt.Sprintf("Waiting for player %d ", client.ID),
+				Score:       client.gameBoard.score,
 			})
 		}
 	}
