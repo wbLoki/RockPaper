@@ -13,7 +13,7 @@ type Client struct {
 	gameBoard *GameBoard
 }
 
-// Message Formate {"type":2,"message":"paper"}
+// Message Formate {"type":2, "message": "paper", "score": 0}
 type Message struct {
 	MessageType int    `json:"type"`
 	Message     string `json:"message"`
