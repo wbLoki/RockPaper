@@ -1,5 +1,5 @@
 var gameId = window.location.pathname.replace("/","")
-var socket = new WebSocket(`ws://localhost:8080/game/${gameId}`)
+var socket = new WebSocket(`ws://localhost:8080/${gameId}`)
 console.log(gameId)
 
 let connect = (cb: any) => {

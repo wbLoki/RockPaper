@@ -32,8 +32,8 @@ function Chat({ History }: { History: Array<MessageType> }) {
     }, [History])
     return (
         <div>
-            <div className='Chat'>
-                {History.map((msg, key) => <Message key={key} messageJson={msg} />)}
+            <div className='Chat' id="chat-box">
+                    {History.map((msg, key) => <Message key={key} messageJson={msg} />)}
             </div>
             <form onSubmit={handleOnSubmit}>
                 <input type="text" onChange={(e) => setChatInput(e.target.value)} value={ChatInput} />
