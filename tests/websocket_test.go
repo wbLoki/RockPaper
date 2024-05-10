@@ -19,7 +19,7 @@ func TestWebSocketHandler(t *testing.T) {
 	srv := httptest.NewServer(r)
 	defer srv.Close()
 
-	wsURL := "ws" + srv.URL[4:] + "/game/123" // Example gameId
+	wsURL := "ws" + srv.URL[4:] + "/game/123"
 
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
 	if err != nil {
