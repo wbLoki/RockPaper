@@ -1,2 +1,5 @@
 run:
-	go run main.go
+	go run ./cmd/RPC/main.go
+
+test:
+	go test ./tests
