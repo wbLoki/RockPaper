@@ -1,5 +1,4 @@
 var gameId = window.location.pathname.replace("/", "")
-var apiURL = process.env.REACT_APP_API_URL
 var apiDomain = process.env.REACT_APP_API_DOMAIN
 var socket = new WebSocket(`ws://${apiDomain}/${gameId}`)
 
