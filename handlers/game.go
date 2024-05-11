@@ -35,3 +35,12 @@ func HandleWebsocketGame(hub *pkg.Hub) gin.HandlerFunc {
 		pkg.ServeWs(pool, c.Writer, c.Request)
 	}
 }
+
+func HandleNewGame(hub *pkg.Hub) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		gameId := pkg.GenerateRandomString()
+
+		c.String(http.StatusOK, gameId)
+		return
+	}
+}

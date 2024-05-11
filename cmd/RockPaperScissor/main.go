@@ -18,6 +18,7 @@ func main() {
 	router := gin.New()
 	router.SetTrustedProxies(nil)
 	router.GET("/", HelloWorldHandler)
+	router.POST("/game", handlers.HandleNewGame(hub))
 	router.GET("/game/:gameId", handlers.HandleWebsocketGame(hub))
 	router.Run(":8080")
 }
