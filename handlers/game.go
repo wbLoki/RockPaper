@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"RockPaperScissor/pkg"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,24 +12,16 @@ func HandleWebsocketGame(hub *pkg.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		gameId := c.Param("gameId")
-		if gameId == "" {
-			c.String(http.StatusBadRequest, "Please provide a Game ID")
+
+		if _, ok := hub.Pools[gameId]; !ok || gameId == "" {
+			c.Redirect(http.StatusPermanentRedirect, "http://localhost:3000/")
 			return
-		}
-
-		if _, ok := hub.Pools[gameId]; !ok {
-			pool := pkg.NewPool()
-
-			hub.Pools[gameId] = pool
-
-			go pool.Start()
-
 		}
 
 		var pool *pkg.Pool = hub.Pools[gameId]
 
 		if len(pool.Clients) == 2 {
-			c.String(http.StatusForbidden, "Lobby is Full")
+			c.Redirect(http.StatusPermanentRedirect, "http://localhost:3000/")
 			return
 		}
 
@@ -40,7 +33,25 @@ func HandleNewGame(hub *pkg.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		gameId := pkg.GenerateRandomString()
 
-		c.String(http.StatusOK, gameId)
-		return
+		pool := pkg.NewPool()
+		hub.Pools[gameId] = pool
+
+		go pool.Start()
+
+		c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:3000/game/%s", gameId))
+
+	}
+}
+
+func HandleValidGame(hub *pkg.Hub) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		gameId := c.Param("gameId")
+
+		if _, ok := hub.Pools[gameId]; !ok {
+			c.String(http.StatusNotFound, "Game not found !")
+			return
+		}
+		c.String(http.StatusOK, "Game Found !")
+
 	}
 }
