@@ -3,13 +3,19 @@ Making RockPaperScissor game using GO &amp; websockets
 
 ## Setup
 ### Backend
-For running in `Local` just
+For running in `Local` 
 ```bash
-go run main.go
+make run # or just make
+```
+or 
+
+```bash
+export CLIENT_URL=http://localhost:3000/ # client Url here
+go run ./cmd/RPC/main.go
 ```
 ### Frontend
 Navigate to `client` directory </br>
-install dependencies
+install dependencies & create `.env` file see `.env.example`
 ```bash
 npm install 
 ```
