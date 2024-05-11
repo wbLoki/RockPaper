@@ -51,6 +51,11 @@ func HandleValidGame(hub *pkg.Hub) gin.HandlerFunc {
 			c.String(http.StatusNotFound, "Game not found !")
 			return
 		}
+
+		if pool := hub.Pools[gameId]; len(pool.Clients) >= 2 {
+			c.String(http.StatusForbidden, "Game is Full")
+			return
+		}
 		c.String(http.StatusOK, "Game Found !")
 
 	}
