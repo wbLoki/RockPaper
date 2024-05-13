@@ -54,7 +54,6 @@ func (c *Client) Read() {
 		case Game:
 			c.pool.board[c.ID].hand = incomingMessage.Message
 			c.pool.gameStatus <- c.ID
-			break
 		default:
 			c.pool.broadcast <- incomingMessage
 		}
