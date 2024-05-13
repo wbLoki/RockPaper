@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"RockPaperScissor/types"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -11,13 +12,6 @@ type Client struct {
 	Conn      *websocket.Conn
 	pool      *Pool
 	gameBoard *GameBoard
-}
-
-// Message Formate {"type":2, "message": "paper", "score": 0}
-type Message struct {
-	MessageType int    `json:"type"`
-	Message     string `json:"message"`
-	Score       int    `json:"score"`
 }
 
 type GameBoard struct {
@@ -36,14 +30,14 @@ const (
 func (c *Client) Read() {
 	defer func() {
 		c.pool.unregister <- c
-		c.pool.broadcast <- Message{
+		c.pool.broadcast <- types.Message{
 			MessageType: GM,
 			Message:     "Player Left",
 		}
 		c.Conn.Close()
 	}()
 	for {
-		var incomingMessage Message
+		var incomingMessage types.Message
 		err := c.Conn.ReadJSON(&incomingMessage)
 		if err != nil {
 			fmt.Println(err)

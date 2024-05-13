@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"RockPaperScissor/types"
+	"RockPaperScissor/utils"
 	"fmt"
 	"strconv"
 )
@@ -9,7 +11,7 @@ type Pool struct {
 	Clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan Message
+	broadcast  chan types.Message
 	board      map[int]*Hand
 	gameStatus chan int
 }
@@ -19,7 +21,7 @@ func NewPool() *Pool {
 		Clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan Message),
+		broadcast:  make(chan types.Message),
 		board:      make(map[int]*Hand),
 		gameStatus: make(chan int),
 	}
@@ -41,16 +43,10 @@ func (p *Pool) Start() {
 }
 
 func (p *Pool) handleClientRegistration(client *Client) {
-	client.Conn.WriteJSON(Message{
-		MessageType: Chat,
-		Message:     "Welcome Player " + strconv.Itoa(client.ID),
-	})
-
+	client.Conn.WriteJSON(utils.SendMessage(Chat, "Welcome Player "+strconv.Itoa(client.ID), client.gameBoard.score))
 	for _client := range p.Clients {
-		_client.Conn.WriteJSON(Message{
-			MessageType: GM,
-			Message:     "Player " + strconv.Itoa(client.ID) + " Joined",
-		})
+		_client.Conn.WriteJSON(
+			utils.SendMessage(GM, "Player "+strconv.Itoa(client.ID)+" Joined", _client.gameBoard.score))
 	}
 	p.Clients[client] = true
 	p.board[client.ID] = &Hand{
@@ -59,7 +55,7 @@ func (p *Pool) handleClientRegistration(client *Client) {
 	}
 }
 
-func (p *Pool) broadcastMessage(message Message) {
+func (p *Pool) broadcastMessage(message types.Message) {
 	for client := range p.Clients {
 		if err := client.Conn.WriteJSON(message); err != nil {
 			fmt.Println(err)
@@ -100,11 +96,7 @@ func (p *Pool) playGame() {
 
 func (p *Pool) notifyAllPlayers(message string) {
 	for c := range p.Clients {
-		c.Conn.WriteJSON(Message{
-			MessageType: GM,
-			Message:     message,
-			Score:       c.gameBoard.score,
-		})
+		c.Conn.WriteJSON(utils.SendMessage(GM, message, c.gameBoard.score))
 	}
 }
 
@@ -112,18 +104,9 @@ func (p *Pool) notifyWinnerAndLosers(winnerId int) {
 	for c := range p.Clients {
 		if winnerId == c.ID {
 			c.gameBoard.score++
-			c.Conn.WriteJSON(Message{
-				MessageType: GM,
-				Message:     "You Win !",
-				Score:       c.gameBoard.score,
-			},
-			)
+			c.Conn.WriteJSON(utils.SendMessage(GM, "You Win !", c.gameBoard.score))
 		} else {
-			c.Conn.WriteJSON(Message{
-				MessageType: GM,
-				Message:     "You Lose !",
-				Score:       c.gameBoard.score,
-			})
+			c.Conn.WriteJSON(utils.SendMessage(GM, "You Lose !", c.gameBoard.score))
 		}
 	}
 }
@@ -135,18 +118,13 @@ func (p *Pool) resetHands() {
 
 func (p *Pool) notifyWaitingPlayers(gameStatus int) {
 	for client := range p.Clients {
+		var message string
 		if client.ID == gameStatus {
-			client.Conn.WriteJSON(Message{
-				MessageType: GM,
-				Message:     "Waiting for other player",
-				Score:       client.gameBoard.score,
-			})
+			message = "Waiting for other player"
+			client.Conn.WriteJSON(utils.SendMessage(GM, message, client.gameBoard.score))
 		} else {
-			client.Conn.WriteJSON(Message{
-				MessageType: GM,
-				Message:     fmt.Sprintf("Waiting for player %d ", client.ID),
-				Score:       client.gameBoard.score,
-			})
+			message = fmt.Sprintf("Waiting for player %d ", client.ID)
+			client.Conn.WriteJSON(utils.SendMessage(GM, message, client.gameBoard.score))
 		}
 	}
 }
