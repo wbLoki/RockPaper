@@ -48,7 +48,7 @@ func (h *Handler) HandleWebsocketGame(c *gin.Context) {
 
 func (h *Handler) HandleNewGame(c *gin.Context) {
 	gameId := pkg.GenerateRandomString()
-	fmt.Println("New Game")
+
 	pool := pkg.NewPool()
 	h.hub.Pools[gameId] = pool
 
