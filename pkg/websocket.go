@@ -20,21 +20,6 @@ const (
 	maxMessageSize = 512
 )
 
-type Hand struct {
-	client *Client
-	hand   string
-}
-
-type Hub struct {
-	Pools map[string]*Pool
-}
-
-func NewHub() *Hub {
-	return &Hub{
-		Pools: make(map[string]*Pool),
-	}
-}
-
 func ServeWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true

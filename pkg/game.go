@@ -1,5 +1,10 @@
 package pkg
 
+type Hand struct {
+	client *Client
+	hand   string
+}
+
 func PlayGame(hand1, hand2 string) int {
 	if hand1 == hand2 {
 		return 0
