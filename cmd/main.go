@@ -9,7 +9,6 @@ import (
 func main() {
 	hub := pkg.NewHub()
 
-	hub.Pools["test"] = pkg.NewPool()
 	server := api.NewApiServer(":8080", hub)
 	if err := server.Run(); err != nil {
 		log.Fatal(err)
