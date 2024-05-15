@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { connect, disconnect } from '../../api';
 import ControllButton from '../../components/ControllButton';
-import Chat from '../../components/ChatComp';
+import Chat from '../../components/ChatComp/ChatComp';
 
 function App() {
   const [IncommingMsg, setIncommingMsg] = useState("")
