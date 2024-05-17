@@ -1,10 +1,10 @@
 package game
 
 import (
+	"RockPaperScissor/config"
 	"RockPaperScissor/pkg"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,21 +25,19 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.GET("/game/:gameId/valid", h.HandleValidGame)
 }
 
-var clientUrl = os.Getenv("CLIENT_URL")
-
 func (h *Handler) HandleWebsocketGame(c *gin.Context) {
 
 	gameId := c.Param("gameId")
 
 	if _, ok := h.hub.Pools[gameId]; !ok || gameId == "" {
-		c.Redirect(http.StatusPermanentRedirect, clientUrl)
+		c.Redirect(http.StatusPermanentRedirect, config.Envs.ClientUrl)
 		return
 	}
 
 	var pool *pkg.Pool = h.hub.Pools[gameId]
 
 	if len(pool.Clients) == 2 {
-		c.Redirect(http.StatusPermanentRedirect, clientUrl)
+		c.Redirect(http.StatusPermanentRedirect, config.Envs.ClientUrl)
 		return
 	}
 
@@ -54,7 +52,7 @@ func (h *Handler) HandleNewGame(c *gin.Context) {
 
 	go pool.Start()
 
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("%sgame/%s", clientUrl, gameId))
+	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("%sgame/%s", config.Envs.ClientUrl, gameId))
 
 }
 
