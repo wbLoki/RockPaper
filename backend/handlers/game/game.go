@@ -3,6 +3,7 @@ package game
 import (
 	"RockPaperScissor/config"
 	"RockPaperScissor/pkg"
+	"RockPaperScissor/utils"
 	"fmt"
 	"net/http"
 
@@ -45,7 +46,7 @@ func (h *Handler) HandleWebsocketGame(c *gin.Context) {
 }
 
 func (h *Handler) HandleNewGame(c *gin.Context) {
-	gameId := pkg.GenerateRandomString()
+	gameId := utils.GenerateRandomString()
 
 	pool := pkg.NewPool()
 	h.hub.Pools[gameId] = pool
