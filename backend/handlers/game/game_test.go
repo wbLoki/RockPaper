@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 func TestGame(t *testing.T) {
-	hub := pkg.NewHub()
-	handler := NewHandler(hub)
+	rdb := redis.Client{}
+	pool := pkg.NewPool(&rdb)
+	handler := NewHandler(pool, &rdb)
 
 	t.Run("Should fail if not ok", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodPost, "/game", nil)

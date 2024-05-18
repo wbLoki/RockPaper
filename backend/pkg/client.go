@@ -2,16 +2,18 @@ package pkg
 
 import (
 	"RockPaperScissor/types"
+	"RockPaperScissor/utils"
 	"fmt"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	ID        int
+	ID        string
 	Conn      *websocket.Conn
 	pool      *Pool
 	gameBoard *GameBoard
+	GameId    string
 }
 
 type GameBoard struct {
@@ -46,8 +48,19 @@ func (c *Client) Read() {
 
 		switch incomingMessage.MessageType {
 		case Game:
-			c.pool.board[c.ID].hand = incomingMessage.Message
-			c.pool.gameStatus <- c.ID
+			var redisGame types.RedisGame
+
+			err := utils.GetFromRedis(c.pool.rdb, c.GameId, &redisGame)
+			if err != nil {
+				fmt.Println(err)
+			}
+			redisGame.Hands[c.ID] = incomingMessage.Message
+
+			if err := utils.SetRedis(c.pool.rdb, c.GameId, redisGame); err != nil {
+				fmt.Println(err)
+			}
+
+			c.pool.gameId <- c.GameId
 		default:
 			c.pool.broadcast <- incomingMessage
 		}

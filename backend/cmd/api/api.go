@@ -6,17 +6,20 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
 type APIServer struct {
 	addr string
-	hub  *pkg.Hub
+	pool *pkg.Pool
+	rdb  *redis.Client
 }
 
-func NewApiServer(addr string, hub *pkg.Hub) *APIServer {
+func NewApiServer(addr string, pool *pkg.Pool, rdb *redis.Client) *APIServer {
 	return &APIServer{
 		addr: addr,
-		hub:  hub,
+		pool: pool,
+		rdb:  rdb,
 	}
 }
 
@@ -41,7 +44,7 @@ func (s *APIServer) Run() error {
 	router.Use(CORSMiddleware())
 	router.SetTrustedProxies(nil)
 
-	gameHandler := game.NewHandler(s.hub)
+	gameHandler := game.NewHandler(s.pool, s.rdb)
 	gameHandler.RegisterRoutes(router)
 
 	log.Println("Listening on ", s.addr)

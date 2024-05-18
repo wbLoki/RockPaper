@@ -4,7 +4,9 @@ import (
 	"RockPaperScissor/types"
 	"RockPaperScissor/utils"
 	"fmt"
-	"strconv"
+	"log"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type Pool struct {
@@ -13,17 +15,19 @@ type Pool struct {
 	unregister chan *Client
 	broadcast  chan types.Message
 	board      map[int]*Hand
-	gameStatus chan int
+	gameId     chan string
+	rdb        *redis.Client
 }
 
-func NewPool() *Pool {
+func NewPool(rdb *redis.Client) *Pool {
 	return &Pool{
 		Clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		broadcast:  make(chan types.Message),
 		board:      make(map[int]*Hand),
-		gameStatus: make(chan int),
+		gameId:     make(chan string),
+		rdb:        rdb,
 	}
 }
 
@@ -36,23 +40,20 @@ func (p *Pool) Start() {
 			p.broadcastMessage(message)
 		case client := <-p.unregister:
 			p.unregisterClient(client)
-		case gameStatus := <-p.gameStatus:
-			p.handleGameStatus(gameStatus)
+		case gameId := <-p.gameId:
+			p.handleGameStatus(gameId)
 		}
 	}
 }
 
 func (p *Pool) handleClientRegistration(client *Client) {
-	client.Conn.WriteJSON(utils.SendMessage(Chat, "Welcome Player "+strconv.Itoa(client.ID), client.gameBoard.score))
+	client.Conn.WriteJSON(utils.SendMessage(Chat, "Welcome Player "+client.ID, client.gameBoard.score))
 	for _client := range p.Clients {
 		_client.Conn.WriteJSON(
-			utils.SendMessage(GM, "Player "+strconv.Itoa(client.ID)+" Joined", _client.gameBoard.score))
+			utils.SendMessage(GM, "Player "+client.ID+" Joined", _client.gameBoard.score))
 	}
 	p.Clients[client] = true
-	p.board[client.ID] = &Hand{
-		client: client,
-		hand:   "X",
-	}
+
 }
 
 func (p *Pool) broadcastMessage(message types.Message) {
@@ -66,32 +67,33 @@ func (p *Pool) broadcastMessage(message types.Message) {
 
 func (p *Pool) unregisterClient(client *Client) {
 	delete(p.Clients, client)
-	delete(p.board, client.ID)
 }
 
-func (p *Pool) handleGameStatus(gameStatus int) {
-	isReady := IsPlayersReady(p)
+func (p *Pool) handleGameStatus(gameId string) {
+	var RedisGame types.RedisGame
+	utils.GetFromRedis(p.rdb, gameId, &RedisGame)
+	isReady := IsPlayersReady(RedisGame)
 	if isReady {
-		p.playGame()
+		p.playGame(RedisGame)
 	} else {
-		p.notifyWaitingPlayers(gameStatus)
+		p.notifyWaitingPlayers()
 	}
 
 }
 
-func (p *Pool) playGame() {
-	player1Hand := p.board[1].hand
-	player2Hand := p.board[2].hand
+func (p *Pool) playGame(RedisGame types.RedisGame) {
+	player1Hand := RedisGame.Hands[RedisGame.Lobby[0]]
+	player2Hand := RedisGame.Hands[RedisGame.Lobby[1]]
 
 	winnerId := PlayGame(player1Hand, player2Hand)
 
 	if winnerId == 0 {
 		p.notifyAllPlayers("It's a Tie !!")
 	} else {
-		p.notifyWinnerAndLosers(winnerId)
+		p.notifyWinnerAndLosers(winnerId-1, RedisGame)
 	}
 
-	p.resetHands()
+	p.resetHands(RedisGame)
 }
 
 func (p *Pool) notifyAllPlayers(message string) {
@@ -100,9 +102,10 @@ func (p *Pool) notifyAllPlayers(message string) {
 	}
 }
 
-func (p *Pool) notifyWinnerAndLosers(winnerId int) {
+func (p *Pool) notifyWinnerAndLosers(winnerId int, RedisGame types.RedisGame) {
+	wPlayer := RedisGame.Lobby[winnerId]
 	for c := range p.Clients {
-		if winnerId == c.ID {
+		if wPlayer == c.ID {
 			c.gameBoard.score++
 			c.Conn.WriteJSON(utils.SendMessage(GM, "You Win !", c.gameBoard.score))
 		} else {
@@ -111,20 +114,18 @@ func (p *Pool) notifyWinnerAndLosers(winnerId int) {
 	}
 }
 
-func (p *Pool) resetHands() {
-	p.board[1].hand = "X"
-	p.board[2].hand = "X"
+func (p *Pool) resetHands(RedisGame types.RedisGame) {
+	RedisGame.Hands[RedisGame.Lobby[0]] = "X"
+	RedisGame.Hands[RedisGame.Lobby[1]] = "X"
+	if err := utils.SetRedis(p.rdb, RedisGame.ID, RedisGame); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func (p *Pool) notifyWaitingPlayers(gameStatus int) {
+func (p *Pool) notifyWaitingPlayers() {
 	for client := range p.Clients {
 		var message string
-		if client.ID == gameStatus {
-			message = "Waiting for other player"
-			client.Conn.WriteJSON(utils.SendMessage(GM, message, client.gameBoard.score))
-		} else {
-			message = fmt.Sprintf("Waiting for player %d ", client.ID)
-			client.Conn.WriteJSON(utils.SendMessage(GM, message, client.gameBoard.score))
-		}
+		message = "Waiting for player"
+		client.Conn.WriteJSON(utils.SendMessage(GM, message, client.gameBoard.score))
 	}
 }
