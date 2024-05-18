@@ -1,0 +1,31 @@
+package game
+
+import (
+	"RockPaperScissor/pkg"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+)
+
+func TestGame(t *testing.T) {
+	hub := pkg.NewHub()
+	handler := NewHandler(hub)
+
+	t.Run("Should fail if not ok", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodPost, "/game", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router := gin.New()
+		router.POST("/game", handler.HandleNewGame)
+		router.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusMovedPermanently {
+			t.Errorf("expected %d got %d", http.StatusMovedPermanently, rr.Code)
+		}
+	})
+}

@@ -3,4 +3,4 @@ run:
 	go run ./cmd/main.go
 
 test:
-	go test ./tests -count=1
+	@go test -v ./...
