@@ -28,4 +28,20 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected %d got %d", http.StatusMovedPermanently, rr.Code)
 		}
 	})
+
+	t.Run("Should fail if gameId found", func(t *testing.T) {
+		req, err := http.NewRequest(http.MethodGet, "/game/testId/valid", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router := gin.New()
+		router.GET("/game/:gameId/valid", handler.HandleValidGame)
+		router.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusNotFound {
+			t.Errorf("expected %d got %d", http.StatusNotFound, rr.Code)
+		}
+	})
 }
