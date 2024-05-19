@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { sendMsg } from '../../api'
+import { useParams } from 'react-router-dom';
 
 type MessageType = {
     type: number;
@@ -18,10 +19,11 @@ function Message({ messageJson }: { messageJson: MessageType }) {
 
 function Chat({ History }: { History: Array<MessageType> }) {
     const [ChatInput, setChatInput] = useState("")
+    const { gameId } = useParams();
 
     const handleOnSubmit = (e: any) => {
         e.preventDefault()
-        var Message = { "type": 1, "message": ChatInput }
+        var Message = { "type": 1, "message": ChatInput, "gameId": gameId }
         sendMsg(JSON.stringify(Message))
         setChatInput("")
     }
@@ -33,7 +35,7 @@ function Chat({ History }: { History: Array<MessageType> }) {
     return (
         <div>
             <div className='Chat' id="chat-box">
-                    {History.map((msg, key) => <Message key={key} messageJson={msg} />)}
+                {History.map((msg, key) => <Message key={key} messageJson={msg} />)}
             </div>
             <form onSubmit={handleOnSubmit}>
                 <input type="text" onChange={(e) => setChatInput(e.target.value)} value={ChatInput} />

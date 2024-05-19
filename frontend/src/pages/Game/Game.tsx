@@ -3,6 +3,7 @@ import './App.css';
 import { connect, disconnect } from '../../api';
 import ControllButton from '../../components/ControllButton';
 import Chat from '../../components/ChatComp/ChatComp';
+import { useParams } from 'react-router-dom';
 
 function App() {
   const [IncommingMsg, setIncommingMsg] = useState("")
@@ -10,14 +11,18 @@ function App() {
   const [Refresher, setRefresher] = useState("")
   const [score, setScore] = useState(0)
 
+
   const setMoreMessages = (msg: any) => {
     setRefresher(msg)
     const messageJson = JSON.parse(msg)
     const message = messageJson.message
     if (messageJson.type === 3 || messageJson.type === 2){
-      setScore(messageJson.score)
       setIncommingMsg(message)
       return
+    }else if (messageJson.type === 4) {
+      setScore(messageJson.score)
+      setIncommingMsg(message)
+      
     }
     
     MessagesList.push(messageJson)
