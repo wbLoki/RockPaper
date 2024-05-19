@@ -50,8 +50,10 @@ func ServeWs(pool *Pool, rdb *redis.Client, redisGame types.RedisGame, c *gin.Co
 	}
 
 	var playerRedis types.PlayerRedis = types.PlayerRedis{
+		Id:     clientId,
 		Score:  0,
 		GameId: gameId,
+		Name:   "Player",
 	}
 
 	playerRedisMarsheld, _ := json.Marshal(playerRedis)
@@ -66,9 +68,6 @@ func ServeWs(pool *Pool, rdb *redis.Client, redisGame types.RedisGame, c *gin.Co
 		pool:   pool,
 		ID:     clientId,
 		GameId: gameId,
-		gameBoard: &GameBoard{
-			score: 0,
-		},
 	}
 
 	pool.register <- client

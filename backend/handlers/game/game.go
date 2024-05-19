@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -31,6 +32,8 @@ func (h *Handler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/game", h.HandleNewGame)
 	router.GET("/game/:gameId", h.HandleWebsocketGame)
 	router.GET("/game/:gameId/valid", h.HandleValidGame)
+
+	router.PUT("/players", h.HandleUpdatePlayer)
 }
 
 func (h *Handler) HandleWebsocketGame(c *gin.Context) {
@@ -55,24 +58,10 @@ func (h *Handler) HandleWebsocketGame(c *gin.Context) {
 		return
 	}
 
-	// if _, ok := h.hub.Pools[gameId]; !ok || gameId == "" {
-	// c.Redirect(http.StatusPermanentRedirect, config.Envs.ClientUrl)
-	// return
-	// }
-
-	// var pool *pkg.Pool = h.hub.Pools[gameId]
-
-	// if len(pool.Clients) == 2 {
-	// c.Redirect(http.StatusPermanentRedirect, config.Envs.ClientUrl)
-	// return
-	// }
-
 	pkg.ServeWs(h.pool, h.rdb, redisGame, c)
 }
 
 func (h *Handler) HandleNewGame(c *gin.Context) {
-	// Generate new gameId and store it to redis
-	// with empty string
 
 	var ctx = context.Background()
 	gameId := utils.GenerateRandomString()
@@ -95,8 +84,6 @@ func (h *Handler) HandleNewGame(c *gin.Context) {
 }
 
 func (h *Handler) HandleValidGame(c *gin.Context) {
-	// gameId will have a key string equal to
-	// player1Id, player2Id
 
 	gameId := c.Param("gameId")
 	var ctx = context.Background()
@@ -120,4 +107,34 @@ func (h *Handler) HandleValidGame(c *gin.Context) {
 	}
 	c.String(http.StatusOK, "Game Found !")
 
+}
+
+func (h *Handler) HandleUpdatePlayer(c *gin.Context) {
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid Request")
+		return
+	}
+
+	var playerPaylaod types.UpdatePlayerPayload
+	if err := json.Unmarshal(body, &playerPaylaod); err != nil {
+		c.String(http.StatusBadRequest, "Invalid Request")
+		return
+	}
+
+	var playerRedis types.PlayerRedis
+	if err := utils.GetFromRedis(h.rdb, playerPaylaod.Id, &playerRedis); err != nil {
+		c.String(http.StatusBadRequest, "Invalid Request")
+		return
+	}
+
+	playerRedis.Name = playerPaylaod.Name
+
+	if err := utils.SetRedis(h.rdb, playerPaylaod.Id, playerRedis); err != nil {
+		c.String(http.StatusInternalServerError, "Ouch")
+		return
+	}
+
+	c.String(http.StatusOK, "Updated Succ")
 }

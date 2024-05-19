@@ -9,21 +9,17 @@ import (
 )
 
 type Client struct {
-	ID        string
-	Conn      *websocket.Conn
-	pool      *Pool
-	gameBoard *GameBoard
-	GameId    string
-}
-
-type GameBoard struct {
-	score int
+	ID     string
+	Conn   *websocket.Conn
+	pool   *Pool
+	GameId string
 }
 
 const (
-	Chat     = 1
-	Game     = 2
-	GM       = 3
+	Chat     = 1 // Normal Chat
+	Game     = 2 // Game
+	GM       = 3 // Game Master
+	GE       = 4 // Game End
 	Rock     = "rock"
 	Paper    = "paper"
 	Scissors = "scissors"
@@ -35,6 +31,8 @@ func (c *Client) Read() {
 		c.pool.broadcast <- types.Message{
 			MessageType: GM,
 			Message:     "Player Left",
+			GameId:      c.GameId,
+			ClientId:    c.ID,
 		}
 		c.Conn.Close()
 	}()
@@ -50,8 +48,7 @@ func (c *Client) Read() {
 		case Game:
 			var redisGame types.RedisGame
 
-			err := utils.GetFromRedis(c.pool.rdb, c.GameId, &redisGame)
-			if err != nil {
+			if err := utils.GetFromRedis(c.pool.rdb, c.GameId, &redisGame); err != nil {
 				fmt.Println(err)
 			}
 			redisGame.Hands[c.ID] = incomingMessage.Message

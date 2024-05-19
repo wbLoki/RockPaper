@@ -27,7 +27,7 @@ func GenerateRandomString() string {
 	return string(b)
 }
 
-func GetFromRedis(rdb *redis.Client, key string, v any) error {
+func GetFromRedis(rdb *redis.Client, key string, v interface{}) error {
 	var ctx = context.Background()
 	val, err := rdb.Get(ctx, key).Result()
 	if err != nil {
@@ -54,4 +54,21 @@ func SetRedis(rdb *redis.Client, key string, v any) error {
 	}
 
 	return nil
+}
+
+func removeItem(slice []string, index int) []string {
+	if index < 0 || index >= len(slice) {
+		return slice
+	}
+
+	return append(slice[:index], slice[index+1:]...)
+}
+
+func RemoveItemByValue(slice []string, value string) []string {
+	for i, v := range slice {
+		if v == value {
+			return removeItem(slice, i)
+		}
+	}
+	return slice
 }
