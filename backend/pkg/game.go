@@ -1,9 +1,6 @@
 package pkg
 
-type Hand struct {
-	client *Client
-	hand   string
-}
+import "RockPaperScissor/types"
 
 func PlayGame(hand1, hand2 string) int {
 	if hand1 == hand2 {
@@ -15,13 +12,14 @@ func PlayGame(hand1, hand2 string) int {
 	}
 }
 
-func IsPlayersReady(pool *Pool) bool {
-	if len(pool.board) == 2 {
-		for _, hand := range pool.board {
-			if hand.hand == "X" {
+func IsPlayersReady(RedisGame types.RedisGame) bool {
+
+	if len(RedisGame.Lobby) == 2 {
+		for _, hand := range RedisGame.Hands {
+			if hand == "X" {
 				return false
 			}
 		}
 	}
-	return len(pool.board) == 2
+	return len(RedisGame.Lobby) == 2
 }

@@ -2,26 +2,26 @@ package pkg
 
 import (
 	"RockPaperScissor/types"
+	"RockPaperScissor/utils"
 	"fmt"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	ID        int
-	Conn      *websocket.Conn
-	pool      *Pool
-	gameBoard *GameBoard
-}
-
-type GameBoard struct {
-	score int
+	ID     string
+	Conn   *websocket.Conn
+	pool   *Pool
+	GameId string
 }
 
 const (
-	Chat     = 1
-	Game     = 2
-	GM       = 3
+	Chat     = 1 // Normal Chat
+	Game     = 2 // Game
+	GM       = 3 // Game Master
+	GE       = 4 // Game End
+	PI       = 5 // Player Info
 	Rock     = "rock"
 	Paper    = "paper"
 	Scissors = "scissors"
@@ -33,6 +33,8 @@ func (c *Client) Read() {
 		c.pool.broadcast <- types.Message{
 			MessageType: GM,
 			Message:     "Player Left",
+			GameId:      c.GameId,
+			ClientId:    c.ID,
 		}
 		c.Conn.Close()
 	}()
@@ -44,10 +46,55 @@ func (c *Client) Read() {
 			break
 		}
 
+		if len(incomingMessage.Message) == 0 {
+			fmt.Println("Empty Message")
+			continue
+		}
+
+		if string(incomingMessage.Message[0]) == "!" {
+			splitedMessage := strings.Split(incomingMessage.Message, " ")
+			if string(splitedMessage[0][1:]) == "name" {
+				newName := splitedMessage[1]
+
+				go func() {
+					var playerRedis types.PlayerRedis
+					if err := utils.GetFromRedis(c.pool.rdb, c.ID, &playerRedis); err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					playerRedis.Name = newName
+
+					if err := utils.SetRedis(c.pool.rdb, c.ID, playerRedis); err != nil {
+						fmt.Println(err)
+						return
+					}
+				}()
+
+				c.Conn.WriteJSON(types.PLayerInfo{
+					MessageType: 5,
+					Name:        newName,
+					Score:       0,
+				})
+
+				continue
+			}
+		}
+
 		switch incomingMessage.MessageType {
 		case Game:
-			c.pool.board[c.ID].hand = incomingMessage.Message
-			c.pool.gameStatus <- c.ID
+			var redisGame types.RedisGame
+
+			if err := utils.GetFromRedis(c.pool.rdb, c.GameId, &redisGame); err != nil {
+				fmt.Println(err)
+			}
+			redisGame.Hands[c.ID] = incomingMessage.Message
+
+			if err := utils.SetRedis(c.pool.rdb, c.GameId, redisGame); err != nil {
+				fmt.Println(err)
+			}
+
+			c.pool.gameId <- c.GameId
 		default:
 			c.pool.broadcast <- incomingMessage
 		}
