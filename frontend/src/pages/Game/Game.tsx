@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import { connect, disconnect } from '../../api';
-import ControllButton from '../../components/ControllButton';
 import Chat from '../../components/ChatComp/ChatComp';
-import { useParams } from 'react-router-dom';
+import { ControllButton } from '../../components/ControllButton';
 
 function App() {
   const [IncommingMsg, setIncommingMsg] = useState("")
