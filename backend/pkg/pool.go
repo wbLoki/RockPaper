@@ -61,14 +61,24 @@ func (p *Pool) handleClientRegistration(client *Client) {
 
 	var RedisGame types.RedisGame
 	if err := utils.GetFromRedis(p.rdb, client.GameId, &RedisGame); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
+
+	playerInfo := types.PLayerInfo{
+		Name:        "player",
+		Score:       RedisGame.Board[client.ID].Score,
+		MessageType: 5,
+	}
+	client.Conn.WriteJSON(playerInfo)
 
 	p.Clients[client.ID] = client
 
 	for _, clientId := range RedisGame.Lobby {
-		p.Clients[clientId].Conn.WriteJSON(
-			utils.SendMessage(GM, "Player "+client.ID+" Joined", 0))
+		if clientId != client.ID {
+			p.Clients[clientId].Conn.WriteJSON(
+				utils.SendMessage(GM, "New Player Joined", 0))
+		}
 	}
 
 }
@@ -104,7 +114,10 @@ func (p *Pool) unregisterClient(client *Client) {
 
 func (p *Pool) handleGameStatus(gameId string) {
 	var RedisGame types.RedisGame
-	utils.GetFromRedis(p.rdb, gameId, &RedisGame)
+	if err := utils.GetFromRedis(p.rdb, gameId, &RedisGame); err != nil {
+		fmt.Println(err)
+	}
+
 	isReady := IsPlayersReady(RedisGame)
 	if isReady {
 		p.playGame(RedisGame)
@@ -139,44 +152,36 @@ func (p *Pool) playGame(RedisGame types.RedisGame) {
 func (p *Pool) notifyWinnerAndLosers(winnerId int, RedisGame types.RedisGame) {
 	wPlayer := RedisGame.Lobby[winnerId]
 	for _, clientId := range RedisGame.Lobby {
+		score := RedisGame.Board[clientId].Score
 		if wPlayer == clientId {
-			var PlayerRedis types.PlayerRedis
-			if err := utils.GetFromRedis(p.rdb, clientId, &PlayerRedis); err != nil {
-				fmt.Println(err)
+			score += 1
+			RedisGame.Board[clientId] = types.GameInfo{
+				Score: score,
 			}
 
-			PlayerRedis.Score += 1
+			go func() {
+				if err := utils.SetRedis(p.rdb, RedisGame.ID, RedisGame); err != nil {
+					fmt.Println(err)
+					return
+				}
+			}()
 
-			if err := utils.SetRedis(p.rdb, clientId, PlayerRedis); err != nil {
-				fmt.Println(err)
-			}
-			player := types.Player{
-				Name: PlayerRedis.Name,
-			}
 			message := types.Message{
 				MessageType: GE,
 				ClientId:    clientId,
 				GameId:      RedisGame.ID,
 				Message:     "You Win !",
-				Score:       PlayerRedis.Score,
-				Player:      player,
+				Score:       score,
 			}
 			p.Clients[clientId].Conn.WriteJSON(message)
 		} else {
-			var PlayerRedis types.PlayerRedis
-			if err := utils.GetFromRedis(p.rdb, clientId, &PlayerRedis); err != nil {
-				fmt.Println(err)
-			}
-			player := types.Player{
-				Name: PlayerRedis.Name,
-			}
+
 			message := types.Message{
 				MessageType: GE,
 				ClientId:    clientId,
 				GameId:      RedisGame.ID,
 				Message:     "You Lose !",
-				Score:       PlayerRedis.Score,
-				Player:      player,
+				Score:       score,
 			}
 			p.Clients[clientId].Conn.WriteJSON(message)
 		}
