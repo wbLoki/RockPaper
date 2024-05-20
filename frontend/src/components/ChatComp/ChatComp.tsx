@@ -5,25 +5,41 @@ import { useParams } from 'react-router-dom';
 type MessageType = {
     type: number;
     message: string;
+    player: PlayerInfo
 };
+
+type PlayerInfo = {
+    name: string,
+    score: number
+}
 
 function Message({ messageJson }: { messageJson: MessageType }) {
     const messageText = messageJson.message
     const messageType = messageJson.type
-    if (messageType === 3) {
+    if (messageType !== 1) {
         return <p><b>{messageText}</b></p>
     }
-    return <p>{messageText}</p>
+    return <p>{messageJson.player.name}: {messageText}</p>
 }
 
 
 function Chat({ History }: { History: Array<MessageType> }) {
     const [ChatInput, setChatInput] = useState("")
     const { gameId } = useParams();
+    const playerInfo = localStorage.getItem("player")
 
     const handleOnSubmit = (e: any) => {
         e.preventDefault()
-        var Message = { "type": 1, "message": ChatInput, "gameId": gameId }
+        if (ChatInput == "") {
+            return
+        }
+        let player = {}
+        if (playerInfo) {
+            player = JSON.parse(playerInfo)
+        }
+        var Message = {
+            "type": 1, "message": ChatInput, "gameId": gameId, "player": player
+        }
         sendMsg(JSON.stringify(Message))
         setChatInput("")
     }

@@ -4,6 +4,7 @@ import (
 	"RockPaperScissor/types"
 	"RockPaperScissor/utils"
 	"fmt"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -20,6 +21,7 @@ const (
 	Game     = 2 // Game
 	GM       = 3 // Game Master
 	GE       = 4 // Game End
+	PI       = 5 // Player Info
 	Rock     = "rock"
 	Paper    = "paper"
 	Scissors = "scissors"
@@ -42,6 +44,41 @@ func (c *Client) Read() {
 		if err != nil {
 			fmt.Println(err)
 			break
+		}
+
+		if len(incomingMessage.Message) == 0 {
+			fmt.Println("Empty Message")
+			continue
+		}
+
+		if string(incomingMessage.Message[0]) == "!" {
+			splitedMessage := strings.Split(incomingMessage.Message, " ")
+			if string(splitedMessage[0][1:]) == "name" {
+				newName := splitedMessage[1]
+
+				go func() {
+					var playerRedis types.PlayerRedis
+					if err := utils.GetFromRedis(c.pool.rdb, c.ID, &playerRedis); err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					playerRedis.Name = newName
+
+					if err := utils.SetRedis(c.pool.rdb, c.ID, playerRedis); err != nil {
+						fmt.Println(err)
+						return
+					}
+				}()
+
+				c.Conn.WriteJSON(types.PLayerInfo{
+					MessageType: 5,
+					Name:        newName,
+					Score:       0,
+				})
+
+				continue
+			}
 		}
 
 		switch incomingMessage.MessageType {

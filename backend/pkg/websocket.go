@@ -37,6 +37,10 @@ func ServeWs(pool *Pool, rdb *redis.Client, redisGame types.RedisGame, c *gin.Co
 
 	redisGame.Lobby = append(redisGame.Lobby, clientId)
 	redisGame.Hands[clientId] = "X"
+	redisGame.Board[clientId] = types.GameInfo{
+		Score: 0,
+	}
+
 	redisGameMarshaled, redisErr := json.Marshal(redisGame)
 	if redisErr != nil {
 		fmt.Println(redisErr)

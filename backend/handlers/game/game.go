@@ -70,6 +70,7 @@ func (h *Handler) HandleNewGame(c *gin.Context) {
 		ID:    gameId,
 		Lobby: make([]string, 0),
 		Hands: make(map[string]string),
+		Board: make(map[string]types.GameInfo),
 	}
 	newGame, _ := json.Marshal(redisGame)
 
