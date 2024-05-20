@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import { connect, disconnect } from '../../api';
 import Chat from '../../components/ChatComp/ChatComp';
+import { ControllButton } from '../../components/ControllButton';
 
 function App() {
   const [IncommingMsg, setIncommingMsg] = useState("")
@@ -39,16 +40,28 @@ function App() {
 
   return (
     <div className="App">
-      <h1>ROckPAperSCissor Game</h1>
-      <h2>Welcome {username}</h2>
-      <h5>Score: {score}</h5>
-      <ControllButton val="rock" />
-      <ControllButton val="paper" />
-      <ControllButton val="scissors" />
+
+      <center>
+        <h1>ROckPAperSCissor Game</h1>
+        <h2>Welcome {username}</h2>
+        <h5>Score: {score}</h5>
+      </center>
+      
+      <div className="controller-container">
+        <ControllButton val="rock" />
+        <ControllButton val="paper" />
+        <ControllButton val="scissors" />
+      </div>
       <br />
       <Chat History={MessagesList} />
       <br />
       <button onClick={disconnect}>Disconnect</button>
+
+      <div className="container-commands">
+        <h5>Commands</h5>
+        <p>To change name use the following commands :</p>
+        <span>!name newName </span>
+      </div>
     </div>
   );
 }
