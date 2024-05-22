@@ -30,7 +30,7 @@ function Chat({ History }: { History: Array<MessageType> }) {
 
     const handleOnSubmit = (e: any) => {
         e.preventDefault()
-        if (ChatInput == "") {
+        if (ChatInput === "") {
             return
         }
         let player = {}

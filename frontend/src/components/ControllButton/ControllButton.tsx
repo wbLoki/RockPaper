@@ -39,14 +39,14 @@ function ControllButton({ val }: { val: string }) {
 }
 
 function RockComp() {
-  return (<div><img src="/assets/Rock.jpg" /><p>Rock</p></div>)
+  return (<div><img alt="Rock" src="/assets/Rock.jpg" /><p>Rock</p></div>)
 }
 function PaperComp() {
-  return (<div><img src="/assets/Paper.jpg" /><p>Paper</p></div>)
+  return (<div><img alt="Paper" src="/assets/Paper.jpg" /><p>Paper</p></div>)
 }
 function ScissorComp() {
   return (<div>
-    <img src="/assets/Scissor.jpg" />
+    <img alt="Scissor" src="/assets/Scissor.jpg" />
     <p>Scissor</p>
   </div>)
 }
