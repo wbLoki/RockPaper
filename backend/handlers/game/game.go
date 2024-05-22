@@ -29,9 +29,9 @@ func NewHandler(pool *pkg.Pool, rdb *redis.Client) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *gin.Engine) {
-	router.POST("/game", h.HandleNewGame)
-	router.GET("/game/:gameId", h.HandleWebsocketGame)
-	router.GET("/game/:gameId/valid", h.HandleValidGame)
+	router.POST("/rpc/game", h.HandleNewGame)
+	router.GET("/rpc/game/:gameId", h.HandleWebsocketGame)
+	router.GET("/rpc/game/:gameId/valid", h.HandleValidGame)
 
 	router.PUT("/players", h.HandleUpdatePlayer)
 }
