@@ -69,6 +69,7 @@ func (p *Pool) handleClientRegistration(client *Client) {
 		Name:        "player",
 		Score:       RedisGame.Board[client.ID].Score,
 		MessageType: 5,
+		PlayerId:    client.ID,
 	}
 	client.Conn.WriteJSON(playerInfo)
 
@@ -104,10 +105,11 @@ func (p *Pool) unregisterClient(client *Client) {
 	}
 	RedisGame.Lobby = utils.RemoveItemByValue(RedisGame.Lobby, client.ID)
 	delete(RedisGame.Hands, client.ID)
+	delete(RedisGame.Board, client.ID)
 	delete(p.Clients, client.ID)
 
 	if err := utils.SetRedis(p.rdb, client.GameId, RedisGame); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 }
@@ -185,6 +187,7 @@ func (p *Pool) notifyWinnerAndLosers(winnerId int, RedisGame types.RedisGame) {
 			}
 			p.Clients[clientId].Conn.WriteJSON(message)
 		}
+		p.Clients[clientId].Conn.WriteJSON(RedisGame)
 	}
 }
 
@@ -192,6 +195,6 @@ func (p *Pool) resetHands(RedisGame types.RedisGame) {
 	RedisGame.Hands[RedisGame.Lobby[0]] = "X"
 	RedisGame.Hands[RedisGame.Lobby[1]] = "X"
 	if err := utils.SetRedis(p.rdb, RedisGame.ID, RedisGame); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }

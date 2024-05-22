@@ -76,7 +76,7 @@ func (h *Handler) HandleNewGame(c *gin.Context) {
 
 	err := h.rdb.Set(ctx, gameId, string(newGame), 0).Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		c.String(http.StatusInternalServerError, "Ouch")
 		return
 	}

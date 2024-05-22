@@ -33,6 +33,7 @@ type PLayerInfo struct {
 	MessageType int    `json:"type"` // PI=5
 	Name        string `json:"name"`
 	Score       int    `json:"score"`
+	PlayerId    string `json:"playerId"`
 }
 
 // Message Formate {"type":2, "message": "paper", "score": 0}
