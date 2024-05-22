@@ -1,6 +1,6 @@
 var gameId = window.location.pathname.replace("/", "")
 var apiDomain = process.env.REACT_APP_API_DOMAIN
-var socket = new WebSocket(`ws://${apiDomain}/${gameId}`)
+var socket = new WebSocket(`wss://${apiDomain}/${gameId}`)
 
 let connect = (cb: any) => {
     console.log("connecting")
