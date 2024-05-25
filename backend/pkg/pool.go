@@ -160,14 +160,6 @@ func (p *Pool) notifyWinnerAndLosers(winnerId int, RedisGame types.RedisGame) {
 			RedisGame.Board[clientId] = types.GameInfo{
 				Score: score,
 			}
-
-			go func() {
-				if err := utils.SetRedis(p.rdb, RedisGame.ID, RedisGame); err != nil {
-					fmt.Println(err)
-					return
-				}
-			}()
-
 			message := types.Message{
 				MessageType: GE,
 				ClientId:    clientId,
@@ -187,6 +179,9 @@ func (p *Pool) notifyWinnerAndLosers(winnerId int, RedisGame types.RedisGame) {
 			}
 			p.Clients[clientId].Conn.WriteJSON(message)
 		}
+
+	}
+	for _, clientId := range RedisGame.Lobby {
 		p.Clients[clientId].Conn.WriteJSON(RedisGame)
 	}
 }
