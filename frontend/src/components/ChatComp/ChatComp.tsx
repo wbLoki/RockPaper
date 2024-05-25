@@ -10,7 +10,8 @@ type MessageType = {
 
 type PlayerInfo = {
     name: string,
-    score: number
+    score: number,
+    playerID: string
 }
 
 function Message({ messageJson }: { messageJson: MessageType }) {
@@ -19,7 +20,7 @@ function Message({ messageJson }: { messageJson: MessageType }) {
     if (messageType !== 1) {
         return <p><b>{messageText}</b></p>
     }
-    return <p>{messageJson.player.name}: {messageText}</p>
+    return <p><span className='playerName'>{messageJson.player.name}:</span> {messageText}</p>
 }
 
 

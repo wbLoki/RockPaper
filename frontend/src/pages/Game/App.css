@@ -40,8 +40,9 @@ body {
 .Chat {
   border: 1px solid black;
   overflow-y: scroll;
+  overflow-wrap: break-word;
   height: 20vh;
-  max-width: 60vw;
+  max-width: 40vw;
 }
 
 p {
@@ -49,6 +50,14 @@ p {
   /* word-wrap: break-word; */
   /* padding: 10px; */
   margin: 0;
+  font-size: 16px;
+}
+
+.playerName {
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: capitalize;
+  
 }
 
 input[type="text"] {
