@@ -11,16 +11,22 @@ type MessageType = {
 type PlayerInfo = {
     name: string,
     score: number,
-    playerID: string
+    playerId: string
 }
 
 function Message({ messageJson }: { messageJson: MessageType }) {
+    const homePlayerInfo = localStorage.getItem("player")
+    let homePlayer:PlayerInfo = {name: '', score: 0, playerId: ''}
+    if (homePlayerInfo) {homePlayer = JSON.parse(homePlayerInfo)}
+    console.log(homePlayer)
     const messageText = messageJson.message
     const messageType = messageJson.type
+    const isHomePlayer = (messageJson.player.playerId === homePlayer.playerId)
+    console.log(messageJson)
     if (messageType !== 1) {
-        return <p><b>{messageText}</b></p>
+        return <p className='systemMessage'>{messageText}</p>
     }
-    return <p><span className='playerName'>{messageJson.player.name}:</span> {messageText}</p>
+    return <p><span className={isHomePlayer ? 'player1' : 'player2'}>{messageJson.player.name}:</span> {messageText}</p>
 }
 
 

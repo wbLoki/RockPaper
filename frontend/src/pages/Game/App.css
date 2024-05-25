@@ -45,6 +45,13 @@ body {
   max-width: 40vw;
 }
 
+.systemMessage {
+  font-style: italic;
+  font-size: 12px;
+  color:#d0dbf0;
+  text-align: center;
+}
+
 p {
   /* max-width: auto; */
   /* word-wrap: break-word; */
@@ -53,11 +60,18 @@ p {
   font-size: 16px;
 }
 
-.playerName {
+.player1 {
+  color: #61dafb;
   font-size: 18px;
   font-weight: 600;
   text-transform: capitalize;
-  
+}
+
+.player2 {
+  color:crimson;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 
 input[type="text"] {
