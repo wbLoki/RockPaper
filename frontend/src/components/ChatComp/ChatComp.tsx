@@ -1,71 +1,85 @@
-import React, { useEffect, useState } from 'react'
-import { sendMsg } from '../../api'
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { sendMsg } from "../../api";
+import { useParams } from "react-router-dom";
 
 type MessageType = {
-    type: number;
-    message: string;
-    player: PlayerInfo
+  type: number;
+  message: string;
+  player: PlayerInfo;
 };
 
 type PlayerInfo = {
-    name: string,
-    score: number,
-    playerId: string
-}
+  name: string;
+  score: number;
+  playerId: string;
+};
 
 function Message({ messageJson }: { messageJson: MessageType }) {
-    const homePlayerInfo = localStorage.getItem("player")
-    let homePlayer:PlayerInfo = {name: '', score: 0, playerId: ''}
-    if (homePlayerInfo) {homePlayer = JSON.parse(homePlayerInfo)}
-    console.log(homePlayer)
-    const messageText = messageJson.message
-    const messageType = messageJson.type
-    const isHomePlayer = (messageJson.player.playerId === homePlayer.playerId)
-    console.log(messageJson)
-    if (messageType !== 1) {
-        return <p className='systemMessage'>{messageText}</p>
-    }
-    return <p><span className={isHomePlayer ? 'player1' : 'player2'}>{messageJson.player.name}:</span> {messageText}</p>
+  const homePlayerInfo = localStorage.getItem("player");
+  let homePlayer: PlayerInfo = { name: "", score: 0, playerId: "" };
+  if (homePlayerInfo) {
+    homePlayer = JSON.parse(homePlayerInfo);
+  }
+  const messageText = messageJson.message;
+  const messageType = messageJson.type;
+  const isHomePlayer = messageJson.player.playerId === homePlayer.playerId;
+  if (messageType !== 1) {
+    return <p className="systemMessage">{messageText}</p>;
+  }
+  return (
+    <p>
+      <span className={isHomePlayer ? "player1" : "player2"}>
+        {messageJson.player.name}:
+      </span>{" "}
+      {messageText}
+    </p>
+  );
 }
-
 
 function Chat({ History }: { History: Array<MessageType> }) {
-    const [ChatInput, setChatInput] = useState("")
-    const { gameId } = useParams();
-    const playerInfo = localStorage.getItem("player")
+  const [ChatInput, setChatInput] = useState("");
+  const { gameId } = useParams();
+  const playerInfo = localStorage.getItem("player");
 
-    const handleOnSubmit = (e: any) => {
-        e.preventDefault()
-        if (ChatInput === "") {
-            return
-        }
-        let player = {}
-        if (playerInfo) {
-            player = JSON.parse(playerInfo)
-        }
-        var Message = {
-            "type": 1, "message": ChatInput, "gameId": gameId, "player": player
-        }
-        sendMsg(JSON.stringify(Message))
-        setChatInput("")
+  const handleOnSubmit = (e: any) => {
+    e.preventDefault();
+    if (ChatInput === "") {
+      return;
     }
+    let player = {};
+    if (playerInfo) {
+      player = JSON.parse(playerInfo);
+    }
+    var Message = {
+      type: 1,
+      message: ChatInput,
+      gameId: gameId,
+      player: player,
+    };
+    sendMsg(JSON.stringify(Message));
+    setChatInput("");
+  };
 
-    useEffect(() => {
-        console.log("New Record")
-
-    }, [History])
-    return (
-        <div>
-            <div className='Chat' id="chat-box">
-                {History.map((msg, key) => <Message key={key} messageJson={msg} />)}
-            </div>
-            <form onSubmit={handleOnSubmit}>
-                <input type="text" onChange={(e) => setChatInput(e.target.value)} value={ChatInput} />
-                <input type="submit" value="Send" />
-            </form>
-        </div>
-    )
+  useEffect(() => {
+    console.log("New Record");
+  }, [History]);
+  return (
+    <div>
+      <div className="Chat" id="chat-box">
+        {History.map((msg, key) => (
+          <Message key={key} messageJson={msg} />
+        ))}
+      </div>
+      <form onSubmit={handleOnSubmit}>
+        <input
+          type="text"
+          onChange={(e) => setChatInput(e.target.value)}
+          value={ChatInput}
+        />
+        <input type="submit" value="Send" />
+      </form>
+    </div>
+  );
 }
 
-export default Chat
+export default Chat;
